@@ -1,128 +1,136 @@
-import * as React from "react"
-import { Link } from "gatsby"
-import { StaticImage } from "gatsby-plugin-image"
+import React, { useState, useEffect } from "react"
+import styled from "styled-components"
+import parse, { domToReact } from "html-react-parser"
+import CustomInput from "../components/Forms/CustomInput"
+import CustomButton from "../components/Forms/CustomButton"
+import Loader from "../components/Loader"
 
-import Layout from "../components/layout"
-import Seo from "../components/seo"
-import * as styles from "../components/index.module.css"
+const Container = styled.div`
+  margin: 3rem auto;
+  max-width: 600px;
+  display: flex;
+  flex-direction: column;
+`
 
-const links = [
-  {
-    text: "Tutorial",
-    url: "https://www.gatsbyjs.com/docs/tutorial",
-    description:
-      "A great place to get started if you're new to web development. Designed to guide you through setting up your first Gatsby site.",
-  },
-  {
-    text: "Examples",
-    url: "https://github.com/gatsbyjs/gatsby/tree/master/examples",
-    description:
-      "A collection of websites ranging from very basic to complex/complete that illustrate how to accomplish specific tasks within your Gatsby sites.",
-  },
-  {
-    text: "Plugin Library",
-    url: "https://www.gatsbyjs.com/plugins",
-    description:
-      "Learn how to add functionality and customize your Gatsby site or app with thousands of plugins built by our amazing developer community.",
-  },
-  {
-    text: "Build and Host",
-    url: "https://www.gatsbyjs.com/cloud",
-    description:
-      "Now you’re ready to show the world! Give your Gatsby site superpowers: Build and host on Gatsby Cloud. Get started for free!",
-  },
-]
+export default function Home() {
+  const [content, setContent] = useState({ head: "", body_attr: "", body: "" })
+  const [loading, setLoading] = useState(false)
+  const [formID, setformID] = useState(
+    "kTPsJ%2BzeZKibmRzaXAQUkiZaKUfppJlc6XfeRwUTQh2GVt%2BFxLUfyX0Ksy59ezAcdrS%2BLf94SS"
+  )
 
-const samplePageLinks = [
-  {
-    text: "Page 2",
-    url: "page-2",
-    badge: false,
-    description:
-      "A simple example of linking to another page within a Gatsby site",
-  },
-  { text: "TypeScript", url: "using-typescript" },
-  { text: "Server Side Rendering", url: "using-ssr" },
-  { text: "Deferred Static Generation", url: "using-dsg" },
-]
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true)
+      try {
+        const response = await fetch(
+          //get: ID=kTPsJ%2BzeZKibmRzaXAQUkiZaKUfppJlc6XfeRwUTQh2GVt%2BFxLUfyX0Ksy59ezAcdrS%2BLf94SS
+          //post: ID=DR9Dhj7bIBnRQLVwCHh82NL9aPsJDvRrbOcZh24QU1yvGVABJlMZUm3ve%2BzFO09O9EJ%2Bez4GMeC8XOTDDl
 
-const moreLinks = [
-  { text: "Join us on Discord", url: "https://gatsby.dev/discord" },
-  {
-    text: "Documentation",
-    url: "https://gatsbyjs.com/docs/",
-  },
-  {
-    text: "Starters",
-    url: "https://gatsbyjs.com/starters/",
-  },
-  {
-    text: "Showcase",
-    url: "https://gatsbyjs.com/showcase/",
-  },
-  {
-    text: "Contributing",
-    url: "https://www.gatsbyjs.com/contributing/",
-  },
-  { text: "Issues", url: "https://github.com/gatsbyjs/gatsby/issues" },
-]
+          "/api/content-rendering?ID=" + formID
+        )
+        if (response.ok) {
+          const data = await response.json()
+          setContent(data)
+        } else {
+          console.error("Error fetching content")
+        }
+        setLoading(false)
+      } catch (error) {
+        console.error("Error:", error)
+        setLoading(false)
+      }
+    }
 
-const utmParameters = `?utm_source=starter&utm_medium=start-page&utm_campaign=default-starter`
+    fetchData()
+  }, [])
 
-const IndexPage = () => (
-  <Layout>
-    <div className={styles.textCenter}>
-      <StaticImage
-        src="../images/example.png"
-        loading="eager"
-        width={64}
-        quality={95}
-        formats={["auto", "webp", "avif"]}
-        alt=""
-        style={{ marginBottom: `var(--space-3)` }}
-      />
-      <h1>
-        Welcome to <b>Gatsby!</b>
-      </h1>
-      <p className={styles.intro}>
-        <b>Example pages:</b>{" "}
-        {samplePageLinks.map((link, i) => (
-          <React.Fragment key={link.url}>
-            <Link to={link.url}>{link.text}</Link>
-            {i !== samplePageLinks.length - 1 && <> · </>}
-          </React.Fragment>
-        ))}
-        <br />
-        Edit <code>src/pages/index.js</code> to update this page.
-      </p>
-    </div>
-    <ul className={styles.list}>
-      {links.map(link => (
-        <li key={link.url} className={styles.listItem}>
-          <a
-            className={styles.listItemLink}
-            href={`${link.url}${utmParameters}`}
+  return (
+    <Container>
+      <h1>Parsed Selligent Form with Styled Components</h1>
+      <p>Styled Components is cool</p>
+      {loading ? <Loader /> : <StyledSelligentForm html={content?.body} setContent={setContent} />}
+    </Container>
+  )
+}
+
+const SelligentForm = ({ className, html, setContent }) => {
+
+  const handleSubmit = async e => {
+    e.preventDefault()
+    const formdata = new FormData(e.target)
+
+    // Debug: Log all form data entries
+    for (let [key, value] of formdata.entries()) {
+      console.log(`${key}: ${value}`)
+    }
+
+    // Create an object to hold specific form data
+    const data = {}
+    formdata.forEach((value, key) => {
+      // Exclude specific fields or process as needed
+      data[key] = value
+    })
+
+    const response = await fetch(e?.target?.action, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    })
+    const result = await response.json()
+    setContent(result)
+    console.log(result)
+  }
+
+  const options = {
+    replace: ({ name, attribs, children }) => {
+      if (!attribs) {
+        return
+      }
+
+      if (name === "input") {
+        const { value, ...restAttribs } = attribs
+        if (attribs.type === "submit") {
+          return <CustomButton type="submit">{value}</CustomButton>
+        } else {
+          return <CustomInput defaultValue={value} {...restAttribs} />
+        }
+      }
+
+      if (name === "form") {
+        // Replace the form's method attribute
+        return (
+          <form
+            method="post"
+            action={attribs.action.replace(
+              "http://localhost:3000",
+              "/api/content-rendering"
+            )}
+            onSubmit={handleSubmit}
           >
-            {link.text} ↗
-          </a>
-          <p className={styles.listItemDescription}>{link.description}</p>
-        </li>
-      ))}
-    </ul>
-    {moreLinks.map((link, i) => (
-      <React.Fragment key={link.url}>
-        <a href={`${link.url}${utmParameters}`}>{link.text}</a>
-        {i !== moreLinks.length - 1 && <> · </>}
-      </React.Fragment>
-    ))}
-  </Layout>
-)
+            {domToReact(children, options)}
+          </form>
+        )
+      }
+    },
+  }
+  return <div className={className}>{parse(html, options)}</div>
+}
 
-/**
- * Head export to define metadata for the page
- *
- * See: https://www.gatsbyjs.com/docs/reference/built-in-components/gatsby-head/
- */
-export const Head = () => <Seo title="Home" />
+const StyledSelligentForm = styled(SelligentForm)`
+  h1 {
+    font-size: 1.5em;
+    text-align: center;
+  }
+  label {
+    color: #007bbd;
+  }
+`
 
-export default IndexPage
+/*const htmlFormJSON = {
+  Body: '<form action="https://longtale.slgnt.eu/optiext/optiextension.dll?ID=mIEzpXz455OGhDoIunOkJ8VNdub4o9DiNuJQsZPVu7VGAblSNhlkOO7F8eKd%2BfA8I5Rl90HQptMsq6ymmy" method="post"><label for="fname">First name:</label><br><input type="text" id="fname" name="FNAME"><br><label for="lname">Last name:</label><br><input type="text" id="lname" name="LNAME"><br><br><input type="submit" value="Submit"></form> ',
+  Head: "",
+  Attributes: "",
+}*/
