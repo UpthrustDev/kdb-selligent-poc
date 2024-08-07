@@ -49,39 +49,50 @@ export default function Home() {
     <Container>
       <h1>Parsed Selligent Form with Styled Components</h1>
       <p>Styled Components is cool</p>
-      {loading ? <Loader /> : <StyledSelligentForm html={content?.body} setContent={setContent} />}
+      {loading ? (
+        <Loader />
+      ) : (
+        <StyledSelligentForm html={content?.body} setContent={setContent} setLoading={setLoading} />
+      )}
     </Container>
   )
 }
 
-const SelligentForm = ({ className, html, setContent }) => {
-
+const SelligentForm = ({ className, html, setContent, setLoading }) => {
   const handleSubmit = async e => {
+    setLoading(true)
     e.preventDefault()
-    const formdata = new FormData(e.target)
 
-    // Debug: Log all form data entries
-    for (let [key, value] of formdata.entries()) {
-      console.log(`${key}: ${value}`)
+    try {
+      const formdata = new FormData(e.target)
+
+      // Debug: Log all form data entries
+      for (let [key, value] of formdata.entries()) {
+        console.log(`${key}: ${value}`)
+      }
+
+      // Create an object to hold specific form data
+      const data = {}
+      formdata.forEach((value, key) => {
+        // Exclude specific fields or process as needed
+        data[key] = value
+      })
+
+      const response = await fetch(e?.target?.action, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      })
+      const result = await response.json()
+      setContent(result)
+      console.log(result)
+      setLoading(false)
+    } catch (error) {
+      console.error("Error:", error)
+      setLoading(false)
     }
-
-    // Create an object to hold specific form data
-    const data = {}
-    formdata.forEach((value, key) => {
-      // Exclude specific fields or process as needed
-      data[key] = value
-    })
-
-    const response = await fetch(e?.target?.action, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(data),
-    })
-    const result = await response.json()
-    setContent(result)
-    console.log(result)
   }
 
   const options = {
@@ -105,7 +116,7 @@ const SelligentForm = ({ className, html, setContent }) => {
           <form
             method="post"
             action={attribs.action.replace(
-              "http://localhost:3000",
+              window?.location?.origin,
               "/api/content-rendering"
             )}
             onSubmit={handleSubmit}

@@ -31,7 +31,6 @@ const LoaderContainer = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100vh; /* Full screen height */
 `;
 
 // Styled component for spinner
